@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIKI Denpasar - Premium Logistic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tiki-blue: #0047FF;
+            --white: #FFFFFF;
+            --light-gray: #F8FAFC;
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+            --card-bg: #E2E8F0;
+            --success: #10B981;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--light-gray);
+            scroll-behavior: smooth;
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--white);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 999;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+
+        .loader-circle {
+            width: 50px; height: 50px;
+            border: 5px solid var(--light-gray);
+            border-top: 5px solid var(--tiki-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Kotak Biru di Atas - DIPERBESAR ke 80px */
+        .top-brand-bar {
+            width: 100%; height: 80px;
+            background-color: var(--tiki-blue);
+            position: fixed; top: 0; z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+        }
+
+        .logo-placeholder {
+            color: white;
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        /* Hero Section (Main Area) */
+        .hero-section {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 120px 20px 40px 20px;
+        }
+
+        .main-card {
+            background-color: var(--card-bg);
+            width: 100%; max-width: 850px;
+            padding: 50px 40px 40px 40px;
+            border-radius: 50px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.06);
+            position: relative;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex; gap: 35px; margin-bottom: 35px; align-items: center;
+        }
+
+        .tab-item {
+            font-weight: 700; font-size: 17px; color: var(--text-dark);
+            cursor: pointer; opacity: 0.4; transition: 0.3s;
+        }
+
+        .tab-item.active { opacity: 1; color: var(--tiki-blue); }
+
+        .blue-dot {
+            width: 45px; height: 45px;
+            background-color: var(--tiki-blue); border-radius: 50%;
+        }
+
+        /* Content Area */
+        .inner-card {
+            background-color: var(--white);
+            border-radius: 35px; padding: 45px;
+            min-height: 150px; /* Diperkecil agar dinamis */
+        }
+
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        h3 { font-size: 22px; margin-bottom: 25px; color: var(--text-dark); font-weight: 800; }
+
+        input, select {
+            width: 100%; padding: 20px;
+            border: 2px solid #F1F5F9; border-radius: 18px;
+            font-size: 16px; background: #F8FAFC;
+            box-sizing: border-box; outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--tiki-blue); background: white; }
+
+        .btn-action {
+            width: 100%; background-color: var(--tiki-blue);
+            color: white; border: none; padding: 20px;
+            border-radius: 18px; font-weight: 800; font-size: 16px;
+            cursor: pointer; transition: 0.3s; margin-top: 15px;
+        }
+
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 71, 255, 0.25); }
+
+        /* GAYA BARU: HASIL SIMULASI LACAK */
+        #tracking-result {
+            margin-top: 30px;
+            display: none;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .status-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 8px 15px; border-radius: 10px;
+            font-weight: 800; font-size: 12px; display: inline-block; margin-bottom: 15px;
+        }
+
+        .tracking-info-box {
+            background: #F8FAFC; border-radius: 25px; padding: 30px; border: 1px solid #E2E8F0;
+        }
+
+        .tracking-timeline {
+            border-left: 3px solid #E2E8F0;
+            margin-left: 10px; padding-left: 25px;
+            position: relative;
+        }
+
+        .timeline-step { margin-bottom: 25px; position: relative; }
+        .timeline-step::before {
+            content: ''; position: absolute; left: -32px; top: 5px;
+            width: 12px; height: 12px; background: #CBD5E1; border-radius: 50%;
+        }
+        .timeline-step.active::before { background: var(--tiki-blue); box-shadow: 0 0 0 5px rgba(0, 71, 255, 0.2); }
+        .step-date { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+        .step-status { font-size: 15px; color: var(--text-dark); font-weight: 600; margin-top: 5px; }
+
+        /* Branch Section */
+        .branch-section {
+            background-color: var(--white);
+            padding: 100px 20px;
+            display: flex; flex-direction: column;
+            align-items: center;
+        }
+
+        .branch-container { width: 100%; max-width: 1000px; }
+
+        .map-wrapper {
+            width: 100%; height: 450px;
+            border-radius: 40px; overflow: hidden;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            margin-top: 30px;
+        }
+
+        iframe { width: 100%; height: 100%; border: none; }
+
+        .branch-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px; margin-top: 50px;
+        }
+
+        .branch-card {
+            background: var(--light-gray); padding: 25px; border-radius: 25px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .branch-card h4 { margin: 0 0 10px 0; color: var(--tiki-blue); }
+        .branch-card p { margin: 0; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="loader-circle"></div>
+        <p style="margin-top: 15px; font-weight: 700; color: var(--tiki-blue);">TIKI DENPASAR</p>
+    </div>
+
+    <!-- Header Baru (80px) -->
+    <div class="top-brand-bar">
+        <div class="logo-placeholder">
+            TIKI DENPASAR
+        </div>
+    </div>
+
+    <!-- MAIN HERO SECTION -->
+    <section class="hero-section">
+        <div class="main-card">
+            <div class="nav-tabs">
+                <div class="tab-item active" onclick="showTab(this, 'track')">Lacak Kiriman</div>
+                <div class="blue-dot"></div>
+                <div class="tab-item" onclick="showTab(this, 'ongkir')">Cek Ongkir</div>
+            </div>
+
+            <div class="inner-card">
+                <!-- FORM LACAK -->
+                <div id="track" class="content-section active">
+                    <h3>Lacak Status Pengiriman</h3>
+                    <input type="text" id="resiInput" placeholder="Masukkan nomor resi Anda">
+                    <button class="btn-action" onclick="runSimulasiLacak()">Lacak Sekarang</button>
+                </div>
+
+                <!-- HASIL SIMULASI MUNCUL DI SINI -->
+                <div id="tracking-result">
+                    <div class="tracking-info-box">
+                        <span class="status-badge">📦 SEDANG DIPROSES</span>
+                        <h4 id="displayResi" style="margin: 0; color: var(--text-dark);">RESI: -</h4>
+                        <p style="font-size: 14px; color: var(--text-muted); margin: 5px 0 25px 0;">Estimasi Tiba: Besok (Bali Area)</p>
+                        
+                        <div class="tracking-timeline">
+                            <div class="timeline-step active">
+                                <div class="step-date">Hari ini, 14:30 WITA</div>
+                                <div class="step-status">Paket telah tiba di Hub Denpasar (Sorting)</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-date">Kemarin, 20:00 WIB</div>
+                                <div class="step-status">Paket dalam perjalanan ke Denpasar</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="step-date">3 Mei 2026, 09:00 WIB</div>
+                                <div class="step-status">Paket diterima di TIKI Jakarta (Gateway)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORM ONGKIR -->
+                <div id="ongkir" class="content-section">
+                    <h3>Hitung Estimasi Biaya</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <input type="text" placeholder="Kota Asal">
+                        <input type="text" placeholder="Kota Tujuan">
+                    </div>
+                    <input type="number" placeholder="Berat (Kg)">
+                    <button class="btn-action">Cek Estimasi Harga</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <p style="font-size: 14px; color: var(--text-muted); font-weight: 600;">
+                    Scroll ke bawah untuk melihat Lokasi Cabang Bali ↓
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SEPARATE BRANCH SECTION -->
+    <section class="branch-section">
+        <div class="branch-container">
+            <h2 style="font-size: 32px; font-weight: 800; text-align: center; margin-bottom: 10px;">Lokasi Cabang TIKI Bali</h2>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 40px;">Temukan titik layanan TIKI terdekat di area Denpasar dan sekitarnya.</p>
+            
+            <div class="map-wrapper">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m12!1m3!1d31558.114781483324!2d115.2016597148564!3d-8.671043743513233!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1stiki%20denpasar!5e0!3m2!1sid!2sid!4v1714825000000!5m2!1sid!2sid"></iframe>
+            </div>
+
+            <div class="branch-grid">
+                <div class="branch-card">
+                    <h4>TIKI Denpasar Hub</h4>
+                    <p>Jl. Kapten Cok Agung Tresna No.22, Dangin Puri Klod, Denpasar Tim.</p>
+                </div>
+                <div class="branch-card">
+                    <h4>TIKI Teuku Umar</h4>
+                    <p>Jl. Teuku Umar No.200, Dauh Puri Kauh, Denpasar Bar.</p>
+                </div>
+                <div class="branch-card">
+                    <h4>TIKI Sanur</h4>
+                    <p>Jl. Danau Buyan No.74, Sanur, Denpasar Sel.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.visibility = 'hidden', 500);
+            }, 1000);
+        });
+
+        function showTab(el, tabId) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            el.classList.add('active');
+            // Reset hasil simulasi kalau pindah tab
+            document.getElementById('tracking-result').style.display = 'none';
+        }
+
+        // FUNGSI BARU: JALANKAN SIMULASI
+        function runSimulasiLacak() {
+            const resi = document.getElementById('resiInput').value;
+            if(!resi) {
+                alert("Masukkan nomor resi dulu ya!");
+                return;
+            }
+
+            // Update teks resi
+            document.getElementById('displayResi').innerText = "RESI: " + resi.toUpperCase();
+            
+            // Tampilkan kotak hasil
+            const resBox = document.getElementById('tracking-result');
+            resBox.style.display = 'block';
+
+            // Scroll ke bawah sedikit biar kelihatan hasilnya
+            window.scrollTo({
+                top: resBox.offsetTop + 100,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Runtime caches
+.gocache/
+.npm-cache/
+.expo/
+.cache/
+mobile-expo/.git.embedded-backup/
+mobile-expo/.claude/
+mobile-expo/AGENTS.md
+mobile-expo/CLAUDE.md
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.postgres.example
+
+# Local databases and logs
+*.sqlite
+*.sqlite-*
+*.log
+*.err.log
+
+# Build output and binaries
+*.exe
+dist/
+build/
+public/build/
+
+# Framework runtime folders
+frontend-laravel/storage/logs/
+frontend-laravel/storage/framework/cache/
+frontend-laravel/storage/framework/sessions/
+frontend-laravel/storage/framework/views/
+frontend-laravel/bootstrap/cache/*.php
+
+# Deployment metadata
+.vercel/
+
+# OS/archive noise
+__MACOSX/
+.DS_Store
+._*

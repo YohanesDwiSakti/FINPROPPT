@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/tracking/:receipt", "destination": "/api/tracking?receipt=:receipt" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - TIKI Denpasar Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tiki-blue: #0047FF;
+            --white: #FFFFFF;
+            --light-gray: #F8FAFC;
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+            --card-bg: #E2E8F0;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--light-gray);
+        }
+
+        /* Kotak Biru Identitas di Atas - DIPERBESAR ke 80px */
+        .top-brand-bar {
+            width: 100%; height: 80px;
+            background-color: var(--tiki-blue);
+            position: fixed; top: 0; z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+        }
+
+        .logo-placeholder {
+            color: white;
+            font-weight: 800;
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .admin-container {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 120px 20px 40px 20px; /* Padding top ditambah agar konten tidak tertutup bar */
+        }
+
+        .main-card {
+            background-color: var(--card-bg);
+            width: 100%; max-width: 700px;
+            padding: 50px 40px;
+            border-radius: 60px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.06);
+        }
+
+        .inner-card {
+            background-color: var(--white);
+            border-radius: 35px; padding: 45px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .badge-admin {
+            background: rgba(0, 71, 255, 0.1);
+            color: var(--tiki-blue);
+            padding: 6px 14px; border-radius: 12px;
+            font-size: 12px; font-weight: 800; display: inline-block; margin-bottom: 20px;
+        }
+
+        h2 { font-size: 26px; margin: 0 0 10px 0; color: var(--text-dark); font-weight: 800; }
+        .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 35px; }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
+        
+        input, select {
+            width: 100%; padding: 20px;
+            border: 2px solid #F1F5F9; border-radius: 18px;
+            font-size: 16px; background: #F8FAFC;
+            box-sizing: border-box; outline: none; transition: 0.3s;
+        }
+
+        input:focus, select:focus { border-color: var(--tiki-blue); background: white; }
+
+        .btn-primary {
+            width: 100%; background-color: var(--tiki-blue);
+            color: white; border: none; padding: 20px;
+            border-radius: 18px; font-weight: 800; font-size: 16px;
+            cursor: pointer; transition: 0.3s; margin-top: 10px;
+        }
+
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 71, 255, 0.25); }
+
+        .divider {
+            border: 0; border-top: 2px solid #F1F5F9; margin: 40px 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .divider::after { content: "ATAU"; background: white; padding: 0 15px; color: var(--text-muted); font-size: 12px; font-weight: 800; }
+
+        .dropzone {
+            border: 2px dashed #D1D5DB; border-radius: 25px;
+            padding: 40px 20px; text-align: center; cursor: pointer;
+            transition: 0.3s; background: #F9FAFB;
+        }
+        .dropzone:hover { border-color: var(--tiki-blue); background: rgba(0, 71, 255, 0.02); }
+
+        .footer {
+            margin-top: 30px; display: flex; justify-content: space-between;
+            font-size: 13px; font-weight: 700; color: var(--text-muted);
+            width: 100%; max-width: 700px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-brand-bar">
+        <div class="logo-placeholder">
+            <!-- Nanti ganti teks ini dengan <img src="logo-kamu.png"> -->
+            TIKI DENPASAR | ADMIN
+        </div>
+    </div>
+
+    <div class="admin-container">
+        <div class="main-card">
+            <div class="inner-card">
+                <span class="badge-admin">TIKI DENPASAR ADMIN</span>
+                <h2>Update Manifes Paket</h2>
+                <p class="subtitle">Kelola data pengiriman masuk dan keluar Hub Bali secara efisien.</p>
+
+                <!-- INPUT MANUAl -->
+                <form id="manualForm">
+                    <div class="input-group">
+                        <label>Nomor Resi</label>
+                        <input type="text" id="resiManual" placeholder="Contoh: TKI-DEN-2026001" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div class="input-group">
+                            <label>Status</label>
+                            <select id="statusManual">
+                                <option value="Arrived">📦 Tiba di Hub Denpasar</option>
+                                <option value="Sorting">🔍 Sedang Disortir</option>
+                                <option value="With Courier">🚚 Dibawa Kurir</option>
+                                <option value="DEX">⏳ DEX (Dikirim Besok)</option>
+                                <option value="Delivered">✅ Diterima</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Area Lokasi</label>
+                            <input type="text" id="lokasiManual" placeholder="Cth: Denpasar Barat">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Update Paket Tunggal</button>
+                </form>
+
+                <div class="divider"></div>
+
+                <!-- BULK UPLOAD -->
+                <div class="bulk-section">
+                    <h3 style="font-size: 18px; margin-bottom: 20px; color: var(--text-dark);">Unggah Massal (Excel/CSV)</h3>
+                    <div class="dropzone" id="dropzone">
+                        <div style="font-size: 40px; margin-bottom: 15px;">📊</div>
+                        <p style="margin: 0; font-weight: 700; color: var(--text-dark);">Tarik file Manifes ke sini</p>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--text-muted);">Mendukung format .xlsx, .xls, atau .csv</p>
+                        <input type="file" id="fileInput" hidden accept=".csv, .xlsx, .xls">
+                    </div>
+                    <button id="btnBulk" class="btn-primary" style="display: none; background-color: #F1F5F9; color: var(--text-dark); margin-top: 15px;">
+                        Proses File Massal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>SESI: ADMIN HUB DENPASAR</span>
+            <span style="color: var(--tiki-blue)">SISTEM LOGISTIK BALI</span>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('manualForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const resi = document.getElementById('resiManual').value;
+            const status = document.getElementById('statusManual').value;
+            let msg = 'Sukses! Paket ' + resi + ' telah diupdate.';
+            
+            if(status === 'DEX') {
+                msg = 'Sukses! Paket ' + resi + ' ditandai DEX dan akan dikirim besok.';
+            }
+            
+            alert(msg);
+            this.reset();
+        });
+
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const btnBulk = document.getElementById('btnBulk');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                dropzone.innerHTML = `
+                    <div style="font-size: 40px; margin-bottom: 15px;">📄</div>
+                    <p style="margin: 0; font-weight: 700; color: var(--tiki-blue);">${this.files[0].name}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--text-muted);">Siap diunggah ke server</p>
+                `;
+                btnBulk.style.display = 'block';
+            }
+        });
+
+        btnBulk.addEventListener('click', function() {
+            alert('Menjalankan skrip pembaca file... Seluruh data manifes akan disinkronkan.');
+            location.reload();
+        });
+    </script>
+</body>
+</html>
