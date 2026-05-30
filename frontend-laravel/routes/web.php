@@ -93,13 +93,7 @@ Route::post('/register', function (Request $request) {
         'role' => 'customer',
     ]);
 
-    session([
-        'user_id' => $user->id,
-        'user_name' => $user->name,
-        'role' => 'customer',
-    ]);
-
-    return redirect('/');
+    return redirect('/login');
 });
 
 Route::post('/logout', function () {
