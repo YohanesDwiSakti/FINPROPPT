@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,12 +12,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	origin := strings.TrimSpace(q.Get("origin"))
 	destination := strings.TrimSpace(q.Get("destination"))
-	weight, err := strconv.Atoi(strings.TrimSpace(q.Get("weight")))
-	if origin == "" || destination == "" || err != nil || weight < 1 {
-		http.Error(w, `{"message":"origin, destination, and weight are required"}`, http.StatusBadRequest)
+	weightInput, err := strconv.ParseFloat(strings.TrimSpace(q.Get("weight")), 64)
+	if origin == "" || destination == "" || err != nil || weightInput <= 0 {
+		w.Header().Set("Content-Type", "application/json")
+		http.Error(w, `{"message":"Kota asal, kota tujuan, dan berat wajib diisi."}`, http.StatusBadRequest)
 		return
 	}
 
+	weight := int(math.Ceil(weightInput))
 	price := 18000 + ((weight - 1) * 9000)
 	if !strings.EqualFold(origin, destination) {
 		price += 7000
@@ -27,6 +30,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		"origin":      origin,
 		"destination": destination,
 		"weight_kg":   weight,
+		"input_kg":    weightInput,
 		"service":     "REG Bali",
 		"price":       price,
 		"estimate":    "1-2 hari kerja",
