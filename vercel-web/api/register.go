@@ -2,12 +2,15 @@ package handler
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type registerRequest struct {
@@ -32,6 +35,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	payload.Email = strings.ToLower(strings.TrimSpace(payload.Email))
 	if payload.Name == "" || payload.Email == "" || len(payload.Password) < 6 {
 		writeRegisterJSON(w, http.StatusBadRequest, map[string]string{"message": "Nama, email, dan password minimal 6 karakter wajib diisi."})
+		return
+	}
+
+	if user, err := saveCustomerToDB(payload); err == nil {
+		writeRegisterJSON(w, http.StatusOK, user)
+		return
+	} else if _, dbErr := registerDatabaseURL(); dbErr == nil {
+		writeRegisterJSON(w, http.StatusBadRequest, map[string]string{"message": "Email sudah terdaftar atau database menolak request."})
 		return
 	}
 
@@ -83,6 +94,57 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeRegisterJSON(w, http.StatusOK, users[0])
+}
+
+func saveCustomerToDB(payload registerRequest) (map[string]string, error) {
+	db, err := openRegisterDatabase()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var id string
+	err = db.QueryRow(
+		`insert into public.app_users (name, email, password, role)
+		 values ($1, $2, $3, 'customer')
+		 returning id::text`,
+		payload.Name,
+		payload.Email,
+		payload.Password,
+	).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		"id":    id,
+		"name":  payload.Name,
+		"email": payload.Email,
+		"role":  "customer",
+	}, nil
+}
+
+func registerDatabaseURL() (string, error) {
+	url := strings.TrimSpace(os.Getenv("DATABASE_URL"))
+	if url == "" {
+		return "", fmt.Errorf("DATABASE_URL belum diset")
+	}
+	if !strings.Contains(url, "sslmode=") {
+		if strings.Contains(url, "?") {
+			url += "&sslmode=require"
+		} else {
+			url += "?sslmode=require"
+		}
+	}
+	return url, nil
+}
+
+func openRegisterDatabase() (*sql.DB, error) {
+	url, err := registerDatabaseURL()
+	if err != nil {
+		return nil, err
+	}
+	return sql.Open("pgx", url)
 }
 
 func supabaseRegisterConfig() (string, string, error) {

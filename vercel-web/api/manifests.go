@@ -2,12 +2,15 @@ package handler
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type manifestRequest struct {
@@ -49,6 +52,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func saveManifestToSupabase(payload manifestRequest) error {
+	if err := saveManifestToDB(payload); err == nil {
+		return nil
+	}
+
 	url := strings.TrimRight(os.Getenv("SUPABASE_URL"), "/")
 	key := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if url == "" || key == "" {
@@ -84,4 +91,38 @@ func saveManifestToSupabase(payload manifestRequest) error {
 		return fmt.Errorf("request ditolak: %s", string(respBody))
 	}
 	return nil
+}
+
+func saveManifestToDB(payload manifestRequest) error {
+	db, err := openManifestDatabase()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Exec(
+		`insert into public.manifests (receipt, status, location)
+		 values ($1, $2, $3)
+		 on conflict (receipt)
+		 do update set status = excluded.status, location = excluded.location, updated_at = now()`,
+		payload.Receipt,
+		payload.Status,
+		payload.Location,
+	)
+	return err
+}
+
+func openManifestDatabase() (*sql.DB, error) {
+	url := strings.TrimSpace(os.Getenv("DATABASE_URL"))
+	if url == "" {
+		return nil, fmt.Errorf("DATABASE_URL belum diset")
+	}
+	if !strings.Contains(url, "sslmode=") {
+		if strings.Contains(url, "?") {
+			url += "&sslmode=require"
+		} else {
+			url += "?sslmode=require"
+		}
+	}
+	return sql.Open("pgx", url)
 }

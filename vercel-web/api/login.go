@@ -2,12 +2,15 @@ package handler
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type loginRequest struct {
@@ -65,6 +68,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func fetchUsersByEmail(email string) ([]appUser, error) {
+	if users, err := fetchUsersByEmailFromDB(email); err == nil {
+		return users, nil
+	}
+
 	url, key, err := supabaseLoginConfig()
 	if err != nil {
 		return demoLoginUsers(email), nil
@@ -95,6 +102,51 @@ func fetchUsersByEmail(email string) ([]appUser, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func fetchUsersByEmailFromDB(email string) ([]appUser, error) {
+	db, err := openLoginDatabase()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query(
+		"select id::text, name, email, password, role from public.app_users where email = $1",
+		email,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []appUser{}
+	for rows.Next() {
+		var user appUser
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	if err := rows.Err(); err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	return users, nil
+}
+
+func openLoginDatabase() (*sql.DB, error) {
+	url := strings.TrimSpace(os.Getenv("DATABASE_URL"))
+	if url == "" {
+		return nil, fmt.Errorf("DATABASE_URL belum diset")
+	}
+	if !strings.Contains(url, "sslmode=") {
+		if strings.Contains(url, "?") {
+			url += "&sslmode=require"
+		} else {
+			url += "?sslmode=require"
+		}
+	}
+	return sql.Open("pgx", url)
 }
 
 func demoLoginUsers(email string) []appUser {
