@@ -30,17 +30,16 @@
       </div>
       <form id="loginForm" class="card form hidden" onsubmit="login(event)">
         <div class="form-head"><h2>Masuk Akun</h2><button class="back" type="button" onclick="showEntry()">Kembali</button></div>
-        <label>Email</label><input id="loginEmail" type="email" placeholder="nama@email.com">
-        <label>Password</label><input id="loginPassword" type="password" placeholder="Masukkan password">
+        <label>Email</label><input id="loginEmail" type="email" placeholder="nama@email.com" required>
+        <label>Password</label><input id="loginPassword" type="password" placeholder="Masukkan password" required>
         <label>Role Akses</label><select id="loginRole"><option value="customer">Customer</option><option value="admin">Admin</option></select>
         <button class="btn primary" style="margin-top:20px" type="submit">Login</button>
-        <p class="notice">Demo admin: admin@tiki.test / admin123. Customer: customer@tiki.test / customer123.</p>
       </form>
       <form id="registerForm" class="card form hidden" onsubmit="register(event)">
         <div class="form-head"><h2>Register Akun</h2><button class="back" type="button" onclick="showEntry()">Kembali</button></div>
-        <label>Nama</label><input id="registerName" type="text" placeholder="Nama lengkap">
-        <label>Email</label><input id="registerEmail" type="email" placeholder="nama@email.com">
-        <label>Password</label><input id="registerPassword" type="password" placeholder="Masukkan password">
+        <label>Nama</label><input id="registerName" type="text" placeholder="Nama lengkap" required>
+        <label>Email</label><input id="registerEmail" type="email" placeholder="nama@email.com" required>
+        <label>Password</label><input id="registerPassword" type="password" placeholder="Masukkan password" required>
         <button class="btn primary" style="margin-top:20px" type="submit">Register</button>
       </form>
     </section>
@@ -59,11 +58,11 @@
     function $(id){return document.getElementById(id)} function show(id){["auth","customer","admin"].forEach(x=>$(x).classList.add("hidden"));$(id).classList.remove("hidden")}
     function clearAuthFields(){["loginEmail","loginPassword","registerName","registerEmail","registerPassword"].forEach(id=>{const el=$(id);if(el)el.value=""});$("loginRole").value="customer"}
     function showAuthForm(type){clearAuthFields();$("entry").classList.add("hidden");$("loginForm").classList.toggle("hidden",type!=="login");$("registerForm").classList.toggle("hidden",type!=="register")} function showEntry(){clearAuthFields();$("entry").classList.remove("hidden");$("loginForm").classList.add("hidden");$("registerForm").classList.add("hidden")}
-    function localUsers(){return JSON.parse(localStorage.getItem("registeredUsers")||"{}")}
+    function localUsers(){try{return JSON.parse(localStorage.getItem("registeredUsers")||"{}")}catch(error){localStorage.removeItem("registeredUsers");return {}}}
     function saveLocalUser(user){const users=localUsers();users[user.email]=user;localStorage.setItem("registeredUsers",JSON.stringify(users))}
     async function login(event){if(event)event.preventDefault();const email=$("loginEmail").value.trim().toLowerCase();const password=$("loginPassword").value;const role=$("loginRole").value;const users=localUsers();if(users[email]&&users[email].password===password&&users[email].role===role){const data={id:"local-"+email,name:users[email].name,email,role};localStorage.setItem("session",JSON.stringify(data));show(data.role==="admin"?"admin":"customer");return}const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password,role})});const data=await res.json();if(!res.ok){alert(data.message||"Login gagal.");return}localStorage.setItem("session",JSON.stringify(data));show(data.role==="admin"?"admin":"customer")}
     async function register(event){if(event)event.preventDefault();const name=$("registerName").value.trim();const email=$("registerEmail").value.trim().toLowerCase();const password=$("registerPassword").value;const res=await fetch("/api/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email,password})});const data=await res.json();if(!res.ok){alert(data.message||"Register gagal.");return}saveLocalUser({name,email,password,role:"customer"});alert("Register berhasil. Silakan login.");showEntry()}
-    function logout(){localStorage.removeItem("session");show("auth");showEntry()} function restore(){const s=localStorage.getItem("session");if(!s)return;const u=JSON.parse(s);show(u.role==="admin"?"admin":"customer")} restore();
+    function logout(){localStorage.removeItem("session");show("auth");showEntry()} function restore(){const s=localStorage.getItem("session");if(!s)return;try{const u=JSON.parse(s);show(u.role==="admin"?"admin":"customer")}catch(error){localStorage.removeItem("session");show("auth");showEntry()}} restore();
     function showTool(t){$("trackPanel").classList.toggle("hidden",t!=="track");$("ratePanel").classList.toggle("hidden",t!=="rate");$("trackTab").classList.toggle("active",t==="track");$("rateTab").classList.toggle("active",t==="rate")}
     async function track(){const receipt=$("receiptInput").value.trim();if(!receipt){alert("Masukkan nomor resi.");return}const r=$("trackingResult");r.style.display="block";r.innerHTML="<p>Memuat...</p>";const data=await fetch(`/api/tracking/${encodeURIComponent(receipt)}`).then(x=>x.json());r.innerHTML=`<span class="badge">${data.status}</span><h3>RESI: ${data.receipt}</h3><p>Lokasi terakhir: ${data.location}. Estimasi tiba: ${data.estimate}.</p>${data.timeline.map(s=>`<p><strong>${s.date}</strong><br>${s.status}</p>`).join("")}`}
     async function rate(){const params=new URLSearchParams({origin:$("originInput").value,destination:$("destinationInput").value,weight:$("weightInput").value});const r=$("rateResult");r.style.display="block";r.innerHTML="<p>Menghitung...</p>";const data=await fetch(`/api/rates?${params}`).then(x=>x.json());r.innerHTML=`<span class="badge">${data.service}</span><h3>Rp ${data.price.toLocaleString("id-ID")}</h3><p>${data.origin} ke ${data.destination}, ${data.weight_kg} kg. Estimasi ${data.estimate}.</p>`}
