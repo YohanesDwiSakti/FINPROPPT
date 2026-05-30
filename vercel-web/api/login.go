@@ -41,7 +41,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	payload.Email = strings.ToLower(strings.TrimSpace(payload.Email))
 	payload.Role = strings.TrimSpace(payload.Role)
-	if payload.Email == "" || payload.Password == "" || (payload.Role != "customer" && payload.Role != "admin") {
+	if payload.Email == "" || payload.Password == "" || (payload.Role != "customer" && payload.Role != "admin" && payload.Role != "pickup") {
 		writeLoginJSON(w, http.StatusBadRequest, map[string]string{"message": "email, password, and role are required"})
 		return
 	}
