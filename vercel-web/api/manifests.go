@@ -124,5 +124,8 @@ func openManifestDatabase() (*sql.DB, error) {
 			url += "?sslmode=require"
 		}
 	}
+	if !strings.Contains(url, "default_query_exec_mode=") {
+		url += "&default_query_exec_mode=simple_protocol"
+	}
 	return sql.Open("pgx", url)
 }
