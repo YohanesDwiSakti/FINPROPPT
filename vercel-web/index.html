@@ -28,21 +28,21 @@
         <button class="btn primary" onclick="showAuthForm('login')">Login</button>
         <button class="btn secondary" onclick="showAuthForm('register')">Register</button>
       </div>
-      <div id="loginForm" class="card form hidden">
-        <div class="form-head"><h2>Masuk Akun</h2><button class="back" onclick="showEntry()">Kembali</button></div>
+      <form id="loginForm" class="card form hidden" onsubmit="login(event)">
+        <div class="form-head"><h2>Masuk Akun</h2><button class="back" type="button" onclick="showEntry()">Kembali</button></div>
         <label>Email</label><input id="loginEmail" type="email" placeholder="nama@email.com">
         <label>Password</label><input id="loginPassword" type="password" placeholder="Masukkan password">
         <label>Role Akses</label><select id="loginRole"><option value="customer">Customer</option><option value="admin">Admin</option></select>
-        <button class="btn primary" style="margin-top:20px" onclick="login()">Login</button>
+        <button class="btn primary" style="margin-top:20px" type="submit">Login</button>
         <p class="notice">Demo admin: admin@tiki.test / admin123. Customer: customer@tiki.test / customer123.</p>
-      </div>
-      <div id="registerForm" class="card form hidden">
-        <div class="form-head"><h2>Register Akun</h2><button class="back" onclick="showEntry()">Kembali</button></div>
+      </form>
+      <form id="registerForm" class="card form hidden" onsubmit="register(event)">
+        <div class="form-head"><h2>Register Akun</h2><button class="back" type="button" onclick="showEntry()">Kembali</button></div>
         <label>Nama</label><input id="registerName" type="text" placeholder="Nama lengkap">
         <label>Email</label><input id="registerEmail" type="email" placeholder="nama@email.com">
         <label>Password</label><input id="registerPassword" type="password" placeholder="Masukkan password">
-        <button class="btn primary" style="margin-top:20px" onclick="register()">Register</button>
-      </div>
+        <button class="btn primary" style="margin-top:20px" type="submit">Register</button>
+      </form>
     </section>
   </main>
   <section id="customer" class="screen hidden">
@@ -59,8 +59,8 @@
     function $(id){return document.getElementById(id)} function show(id){["auth","customer","admin"].forEach(x=>$(x).classList.add("hidden"));$(id).classList.remove("hidden")}
     function clearAuthFields(){["loginEmail","loginPassword","registerName","registerEmail","registerPassword"].forEach(id=>{const el=$(id);if(el)el.value=""});$("loginRole").value="customer"}
     function showAuthForm(type){clearAuthFields();$("entry").classList.add("hidden");$("loginForm").classList.toggle("hidden",type!=="login");$("registerForm").classList.toggle("hidden",type!=="register")} function showEntry(){clearAuthFields();$("entry").classList.remove("hidden");$("loginForm").classList.add("hidden");$("registerForm").classList.add("hidden")}
-    async function login(){const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("loginEmail").value.trim(),password:$("loginPassword").value,role:$("loginRole").value})});const data=await res.json();if(!res.ok){alert(data.message||"Login gagal.");return}localStorage.setItem("session",JSON.stringify(data));show(data.role==="admin"?"admin":"customer")}
-    async function register(){const res=await fetch("/api/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:$("registerName").value.trim(),email:$("registerEmail").value.trim(),password:$("registerPassword").value})});const data=await res.json();if(!res.ok){alert(data.message||"Register gagal.");return}alert("Register berhasil. Silakan login.");showEntry()}
+    async function login(event){if(event)event.preventDefault();const res=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("loginEmail").value.trim(),password:$("loginPassword").value,role:$("loginRole").value})});const data=await res.json();if(!res.ok){alert(data.message||"Login gagal.");return}localStorage.setItem("session",JSON.stringify(data));show(data.role==="admin"?"admin":"customer")}
+    async function register(event){if(event)event.preventDefault();const res=await fetch("/api/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:$("registerName").value.trim(),email:$("registerEmail").value.trim(),password:$("registerPassword").value})});const data=await res.json();if(!res.ok){alert(data.message||"Register gagal.");return}alert("Register berhasil. Silakan login.");showEntry()}
     function logout(){localStorage.removeItem("session");show("auth");showEntry()} function restore(){const s=localStorage.getItem("session");if(!s)return;const u=JSON.parse(s);show(u.role==="admin"?"admin":"customer")} restore();
     function showTool(t){$("trackPanel").classList.toggle("hidden",t!=="track");$("ratePanel").classList.toggle("hidden",t!=="rate");$("trackTab").classList.toggle("active",t==="track");$("rateTab").classList.toggle("active",t==="rate")}
     async function track(){const receipt=$("receiptInput").value.trim();if(!receipt){alert("Masukkan nomor resi.");return}const r=$("trackingResult");r.style.display="block";r.innerHTML="<p>Memuat...</p>";const data=await fetch(`/api/tracking/${encodeURIComponent(receipt)}`).then(x=>x.json());r.innerHTML=`<span class="badge">${data.status}</span><h3>RESI: ${data.receipt}</h3><p>Lokasi terakhir: ${data.location}. Estimasi tiba: ${data.estimate}.</p>${data.timeline.map(s=>`<p><strong>${s.date}</strong><br>${s.status}</p>`).join("")}`}
