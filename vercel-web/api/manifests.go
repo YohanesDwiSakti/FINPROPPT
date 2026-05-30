@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -20,6 +21,19 @@ type manifestRequest struct {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		manifests, err := listManifestsFromDB()
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"message": "Data status kiriman belum bisa dimuat."})
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(manifests)
+		return
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"message":"method not allowed"}`, http.StatusMethodNotAllowed)
 		return
@@ -110,6 +124,41 @@ func saveManifestToDB(payload manifestRequest) error {
 		payload.Location,
 	)
 	return err
+}
+
+func listManifestsFromDB() ([]map[string]any, error) {
+	db, err := openManifestDatabase()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query(
+		`select receipt, status, coalesce(location, ''), updated_at
+		 from public.manifests
+		 order by updated_at desc
+		 limit 20`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	manifests := []map[string]any{}
+	for rows.Next() {
+		var receipt, status, location string
+		var updatedAt time.Time
+		if err := rows.Scan(&receipt, &status, &location, &updatedAt); err != nil {
+			return nil, err
+		}
+		manifests = append(manifests, map[string]any{
+			"receipt":    receipt,
+			"status":     status,
+			"location":   location,
+			"updated_at": updatedAt.Format(time.RFC3339),
+		})
+	}
+	return manifests, rows.Err()
 }
 
 func openManifestDatabase() (*sql.DB, error) {
