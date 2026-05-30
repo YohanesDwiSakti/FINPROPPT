@@ -19,7 +19,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	weight := int(math.Ceil(weightInput))
+	weight := int(math.Floor(weightInput + 0.5))
+	if weight < 1 {
+		weight = 1
+	}
 	price := 18000 + ((weight - 1) * 9000)
 	if !strings.EqualFold(origin, destination) {
 		price += 7000
