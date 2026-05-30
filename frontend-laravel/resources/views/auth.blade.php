@@ -310,13 +310,25 @@
         const entryCard = document.getElementById('entryCard');
         const cards = document.querySelectorAll('.form-card');
 
+        function clearAuthFields() {
+            ['login-email', 'login-password', 'register-name', 'register-email', 'register-password'].forEach((id) => {
+                const input = document.getElementById(id);
+                if (input) input.value = '';
+            });
+
+            const role = document.getElementById('login-role');
+            if (role) role.value = 'customer';
+        }
+
         function showCard(id) {
+            clearAuthFields();
             entryCard.classList.add('hidden');
             cards.forEach((card) => card.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
         function showEntry() {
+            clearAuthFields();
             cards.forEach((card) => card.classList.remove('active'));
             entryCard.classList.remove('hidden');
         }
