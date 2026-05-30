@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -31,8 +34,54 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := saveManifestToSupabase(payload); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": fmt.Sprintf("Manifest %s berhasil diproses. Supabase belum aktif: %s", payload.Receipt, err.Error()),
+		})
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": fmt.Sprintf("Manifest %s berhasil diproses.", payload.Receipt),
+		"message": fmt.Sprintf("Manifest %s berhasil disimpan ke Supabase.", payload.Receipt),
 	})
+}
+
+func saveManifestToSupabase(payload manifestRequest) error {
+	url := strings.TrimRight(os.Getenv("SUPABASE_URL"), "/")
+	key := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	if url == "" || key == "" {
+		return fmt.Errorf("environment variables belum diset")
+	}
+
+	body, err := json.Marshal(map[string]string{
+		"receipt":  payload.Receipt,
+		"status":   payload.Status,
+		"location": payload.Location,
+	})
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url+"/rest/v1/manifests?on_conflict=receipt", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("apikey", key)
+	req.Header.Set("Authorization", "Bearer "+key)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Prefer", "resolution=merge-duplicates")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("request ditolak: %s", string(respBody))
+	}
+	return nil
 }

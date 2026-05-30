@@ -29,3 +29,5 @@ Deployable Vercel app lives in `vercel-web`.
 Production deployment:
 
 https://vercel-web-xi.vercel.app
+
+Supabase setup for the Vercel app is documented in `vercel-web/SUPABASE_SETUP.md`.
