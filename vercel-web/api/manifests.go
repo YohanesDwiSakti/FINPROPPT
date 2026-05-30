@@ -61,7 +61,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": fmt.Sprintf("Manifest %s berhasil disimpan ke Supabase.", payload.Receipt),
+		"message": fmt.Sprintf("Data resi %s berhasil disimpan.", payload.Receipt),
 	})
 }
 
